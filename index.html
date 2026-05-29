@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>T形コネクタ選定</title>
+  <title>接続材選定ツール</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -23,6 +23,32 @@
     }
     header h1 { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
     header p { font-size: 12px; color: #8899bb; margin-top: 4px; }
+
+    /* タブ */
+    .tab-bar {
+      display: flex;
+      background: #111827;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 14px 8px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #7799cc;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      color: #e85c0a;
+      border-bottom-color: #e85c0a;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     .section { padding: 16px; }
 
@@ -80,7 +106,7 @@
     }
     .type-btn.selected .sub { color: #7799cc; }
 
-    /* サイズボタン */
+    /* サイズボタン共通 */
     .size-grid {
       display: flex;
       flex-wrap: wrap;
@@ -106,24 +132,86 @@
       font-weight: normal;
       margin-top: 2px;
     }
-    .size-btn.selected-main {
+    .size-btn.selected-main  { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+    .size-btn.selected-main .size-sub { color: #7799cc; }
+    .size-btn.selected-branch { background: #e85c0a; border-color: #e85c0a; color: white; }
+    .size-btn.selected-branch .size-sub { color: #ffe0cc; }
+    .size-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+    /* Pスリーブ：電線カウンター */
+    .wire-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .wire-btn {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 14px 10px;
+      font-size: 17px;
+      font-weight: bold;
+      color: #111;
+      cursor: pointer;
+      min-width: 72px;
+      text-align: center;
+      position: relative;
+      transition: all 0.12s;
+    }
+    .wire-btn .wire-sub {
+      display: block;
+      font-size: 10px;
+      color: #999;
+      font-weight: normal;
+      margin-top: 2px;
+    }
+    .wire-btn.has-count {
       background: #1a1a2e;
       border-color: #1a1a2e;
       color: white;
     }
-    .size-btn.selected-main .size-sub { color: #7799cc; }
-    .size-btn.selected-branch {
+    .wire-btn.has-count .wire-sub { color: #7799cc; }
+    .wire-count-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
       background: #e85c0a;
-      border-color: #e85c0a;
       color: white;
-    }
-    .size-btn.selected-branch .size-sub { color: #ffe0cc; }
-    .size-btn.disabled {
-      opacity: 0.3;
-      pointer-events: none;
+      font-size: 13px;
+      font-weight: bold;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* 結果 */
+    /* 合計表示バー */
+    .total-bar {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .total-label { font-size: 12px; color: #888; }
+    .total-value { font-size: 22px; font-weight: bold; color: #1a1a2e; }
+    .reset-btn {
+      background: #f0f0f0;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #666;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* 結果カード */
     .result-card {
       background: white;
       border-radius: 12px;
@@ -142,16 +230,8 @@
       line-height: 1;
       letter-spacing: -1px;
     }
-    .result-sub {
-      font-size: 13px;
-      color: #aaa;
-      margin-top: 8px;
-    }
-    .result-note {
-      font-size: 14px;
-      color: #333;
-      line-height: 1.7;
-    }
+    .result-sub { font-size: 13px; color: #aaa; margin-top: 8px; }
+    .result-note { font-size: 14px; color: #333; line-height: 1.7; }
 
     .mark-badge {
       display: inline-block;
@@ -162,7 +242,7 @@
       margin-left: 8px;
       vertical-align: middle;
     }
-    .mark-maru { background: #e8f4ff; color: #1a6abf; border: 1px solid #1a6abf; }
+    .mark-maru    { background: #e8f4ff; color: #1a6abf; border: 1px solid #1a6abf; }
     .mark-sankaku { background: #fff8e8; color: #b07800; border: 1px solid #b07800; }
 
     .note {
@@ -173,160 +253,164 @@
     }
 
     .divider { height: 8px; background: #e8e8e8; }
-    #step2 { display: none; }
-    #step3 { display: none; }
-    #resultArea { display: none; }
-    #dividerResult { display: none; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>⚡ T形コネクタ選定</h1>
-  <p>ニチフ T形コネクタ（分岐接続用）即検索ツール</p>
+  <h1>⚡ 接続材選定ツール</h1>
+  <p>T形コネクタ・Pスリーブ 即検索（ニチフ）</p>
 </header>
 
-<!-- STEP 1: 電線種別 -->
-<div class="section" id="step1">
-  <div class="step-header">
-    <div class="step-badge">1</div>
-    <div class="step-title">電線の種類を選ぶ</div>
+<!-- タブ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('t')">T形コネクタ</button>
+  <button class="tab-btn" onclick="switchTab('p')">P形スリーブ</button>
+</div>
+
+<!-- ===================== T形コネクタ ===================== -->
+<div class="tab-content active" id="tab-t">
+
+  <div class="section" id="t-step1">
+    <div class="step-header">
+      <div class="step-badge">1</div>
+      <div class="step-title">電線の種類を選ぶ</div>
+    </div>
+    <div class="type-grid">
+      <button class="type-btn" onclick="selectType(this,'IV')">IV電線<span class="sub">600V ビニル絶縁電線</span></button>
+      <button class="type-btn" onclick="selectType(this,'CV')">CV電線<span class="sub">架橋ポリエチレン絶縁</span></button>
+    </div>
   </div>
-  <div class="type-grid">
-    <button class="type-btn" onclick="selectType(this,'IV')">IV電線<span class="sub">600V ビニル絶縁電線</span></button>
-    <button class="type-btn" onclick="selectType(this,'CV')">CV電線<span class="sub">架橋ポリエチレン絶縁</span></button>
+
+  <div class="divider"></div>
+
+  <div class="section" id="t-step2" style="display:none">
+    <div class="step-header">
+      <div class="step-badge">2</div>
+      <div class="step-title">幹線サイズを選ぶ（mm²）</div>
+    </div>
+    <div class="size-grid" id="mainGrid"></div>
+  </div>
+
+  <div class="divider" id="t-divider2" style="display:none"></div>
+
+  <div class="section" id="t-step3" style="display:none">
+    <div class="step-header">
+      <div class="step-badge">3</div>
+      <div class="step-title">分岐サイズを選ぶ（mm²）</div>
+    </div>
+    <div class="size-grid" id="branchGrid"></div>
+  </div>
+
+  <div class="divider" id="t-dividerResult" style="display:none"></div>
+
+  <div id="t-resultArea" style="display:none">
+    <div class="section">
+      <div class="result-card accent-orange">
+        <div class="result-label">使用するT形コネクタ</div>
+        <div class="result-value" id="rResult">—</div>
+        <div class="result-sub">ニチフ T形コネクタ（分岐接続用）</div>
+      </div>
+      <div class="result-card accent-blue">
+        <div class="result-label">備考</div>
+        <div class="result-note" id="rNote">—</div>
+      </div>
+    </div>
+    <p class="note">
+      ※ ニチフ T形コネクタ（分岐接続用）カタログ準拠。<br>
+      ※ ◎：推奨組み合わせ　△：使用可能（条件確認推奨）<br>
+      ※ 現場条件・電線メーカーにより異なる場合があります。
+    </p>
   </div>
 </div>
 
-<div class="divider"></div>
+<!-- ===================== P形スリーブ ===================== -->
+<div class="tab-content" id="tab-p">
 
-<!-- STEP 2: 幹線サイズ -->
-<div class="section" id="step2">
-  <div class="step-header">
-    <div class="step-badge">2</div>
-    <div class="step-title">幹線サイズを選ぶ（mm²）</div>
-  </div>
-  <div class="size-grid" id="mainGrid"></div>
-</div>
-
-<div class="divider" id="divider2" style="display:none"></div>
-
-<!-- STEP 3: 分岐サイズ -->
-<div class="section" id="step3">
-  <div class="step-header">
-    <div class="step-badge">3</div>
-    <div class="step-title">分岐サイズを選ぶ（mm²）</div>
-  </div>
-  <div class="size-grid" id="branchGrid"></div>
-</div>
-
-<div class="divider" id="dividerResult"></div>
-
-<!-- RESULT -->
-<div id="resultArea">
   <div class="section">
-    <div class="result-card accent-orange">
-      <div class="result-label">使用するT形コネクタ</div>
-      <div class="result-value" id="rResult">—</div>
-      <div class="result-sub" id="rSub"></div>
+    <div class="step-header">
+      <div class="step-badge">1</div>
+      <div class="step-title">接続する電線を選ぶ（タップで本数を追加）</div>
     </div>
-    <div class="result-card accent-blue">
-      <div class="result-label">備考</div>
-      <div class="result-note" id="rNote">—</div>
+    <div class="wire-grid" id="wireGrid"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="total-bar">
+      <div>
+        <div class="total-label">断面積合計</div>
+        <div class="total-value" id="pTotal">0.00 mm²</div>
+      </div>
+      <button class="reset-btn" onclick="resetWires()">リセット</button>
+    </div>
+
+    <div id="p-resultArea" style="display:none">
+      <div class="result-card accent-orange">
+        <div class="result-label">使用するPスリーブ</div>
+        <div class="result-value" id="pResult">—</div>
+        <div class="result-sub" id="pRange"></div>
+      </div>
+      <div class="result-card accent-blue">
+        <div class="result-label">接続内容</div>
+        <div class="result-note" id="pNote">—</div>
+      </div>
     </div>
   </div>
+
   <p class="note">
-    ※ ニチフ T形コネクタ（分岐接続用）のカタログデータに基づく値です。<br>
-    ※ ◎：推奨組み合わせ　△：使用可能（条件確認推奨）<br>
-    ※ 現場条件・電線メーカーにより異なる場合があります。必ずカタログで確認してください。
+    ※ ニチフ P形裸圧着スリーブ カタログ準拠。<br>
+    ※ 電線の断面積合計から号数を選定します。<br>
+    ※ 必ずカタログで確認してください。
   </p>
 </div>
 
 <script>
 // ============================================================
-// T形コネクタ電線組合せ表（ニチフカタログ準拠）
-// 行：幹線サイズ、列：分岐サイズ
-// 値：T号数文字列（null=組み合わせ不可）
-// マーク: ◎=推奨, △=条件付き
+// T形コネクタ データ
 // ============================================================
-
 const MAIN_SIZES = [
-  { label: '3.5', sub: '(2.0φ)' },
-  { label: '5.5', sub: '' },
-  { label: '8',   sub: '' },
-  { label: '14',  sub: '' },
-  { label: '22',  sub: '' },
-  { label: '38',  sub: '' },
-  { label: '60',  sub: '' },
-  { label: '100', sub: '' },
-  { label: '150', sub: '' },
-  { label: '200', sub: '' },
-  { label: '250', sub: '' },
+  { label:'3.5', sub:'(2.0φ)' }, { label:'5.5', sub:'' },
+  { label:'8',   sub:'' },        { label:'14',  sub:'' },
+  { label:'22',  sub:'' },        { label:'38',  sub:'' },
+  { label:'60',  sub:'' },        { label:'100', sub:'' },
+  { label:'150', sub:'' },        { label:'200', sub:'' },
+  { label:'250', sub:'' },
 ];
-
 const BRANCH_SIZES = [
-  { label: '2',   sub: '(1.6φ)' },
-  { label: '3.5', sub: '(2.0φ)' },
-  { label: '5.5', sub: '' },
-  { label: '8',   sub: '' },
-  { label: '14',  sub: '' },
-  { label: '22',  sub: '' },
-  { label: '38',  sub: '' },
-  { label: '60',  sub: '' },
-  { label: '100', sub: '' },
+  { label:'2',   sub:'(1.6φ)' }, { label:'3.5', sub:'(2.0φ)' },
+  { label:'5.5', sub:'' },        { label:'8',   sub:'' },
+  { label:'14',  sub:'' },        { label:'22',  sub:'' },
+  { label:'38',  sub:'' },        { label:'60',  sub:'' },
+  { label:'100', sub:'' },
 ];
-
-// マーク凡例: '' = 通常, '◎' = 推奨, '△' = 条件付き
-// フォーマット: { t: 'T44', m: '◎' } または null
-
 const TABLE = {
   IV: [
-    // 幹線3.5
-    [ {t:'T7',m:''}, {t:'T7',m:''},  null,           null,            null,             null,            null,           null,          null  ],
-    // 幹線5.5
-    [ null,          {t:'T11',m:''}, {t:'T11',m:''},  null,            null,             null,            null,           null,          null  ],
-    // 幹線8
-    [ null,          null,           {t:'T16',m:''},  {t:'T16',m:''},  {t:'T16〜T20',m:''},null,          null,           null,          null  ],
-    // 幹線14
-    [ null,          null,           {t:'T16〜T20',m:''},{t:'T20',m:''},{t:'T20',m:''},  {t:'T26',m:''},  null,           null,          null  ],
-    // 幹線22
-    [ null,          null,           null,            {t:'T26',m:''},  {t:'T26',m:''},   {t:'T44',m:''},  {t:'T44',m:''}, null,          null  ],
-    // 幹線38
-    [ null,          null,           null,            {t:'T44',m:'◎'},{t:'T44',m:'◎'},  {t:'T44',m:''},  {t:'T60',m:''}, {t:'T60',m:''},{t:'T76',m:''}  ],
-    // 幹線60
-    [ null,          null,           null,            {t:'T76',m:'◎'},{t:'T76',m:'◎'},  {t:'T76',m:''},  {t:'T76',m:''}, {t:'T98',m:''},{t:'T122',m:''} ],
-    // 幹線100
-    [ null,          null,           null,            {t:'T122',m:'◎'},{t:'T122',m:'◎'},{t:'T122',m:'△'},{t:'T122',m:''},{t:'T154',m:''},{t:'T190',m:''}],
-    // 幹線150
-    [ null,          null,           null,            {t:'T154',m:'◎'},{t:'T190',m:'◎'},{t:'T190',m:'△'},{t:'T190',m:''},{t:'T190',m:''},{t:'T240',m:''}],
-    // 幹線200
-    [ null,          null,           null,            {t:'T240',m:'◎'},{t:'T240',m:'◎'},{t:'T240',m:'△'},{t:'T240',m:'◎'},{t:'T240',m:''},{t:'T288',m:''}],
-    // 幹線250
-    [ null,          null,           null,            null,            null,             {t:'T288',m:'◎'},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''}],
+    [{t:'T7',m:''},{t:'T7',m:''},null,null,null,null,null,null,null],
+    [null,{t:'T11',m:''},{t:'T11',m:''},null,null,null,null,null,null],
+    [null,null,{t:'T16',m:''},{t:'T16',m:''},{t:'T16〜T20',m:''},null,null,null,null],
+    [null,null,{t:'T16〜T20',m:''},{t:'T20',m:''},{t:'T20',m:''},{t:'T26',m:''},null,null,null],
+    [null,null,null,{t:'T26',m:''},{t:'T26',m:''},{t:'T44',m:''},{t:'T44',m:''},null,null],
+    [null,null,null,{t:'T44',m:'◎'},{t:'T44',m:'◎'},{t:'T44',m:''},{t:'T60',m:''},{t:'T60',m:''},{t:'T76',m:''}],
+    [null,null,null,{t:'T76',m:'◎'},{t:'T76',m:'◎'},{t:'T76',m:''},{t:'T76',m:''},{t:'T98',m:''},{t:'T122',m:''}],
+    [null,null,null,{t:'T122',m:'◎'},{t:'T122',m:'◎'},{t:'T122',m:'△'},{t:'T122',m:''},{t:'T154',m:''},{t:'T190',m:''}],
+    [null,null,null,{t:'T154',m:'◎'},{t:'T190',m:'◎'},{t:'T190',m:'△'},{t:'T190',m:''},{t:'T190',m:''},{t:'T240',m:''}],
+    [null,null,null,{t:'T240',m:'◎'},{t:'T240',m:'◎'},{t:'T240',m:'△'},{t:'T240',m:'◎'},{t:'T240',m:''},{t:'T288',m:''}],
+    [null,null,null,null,null,{t:'T288',m:'◎'},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''}],
   ],
   CV: [
-    // 幹線3.5
-    [ {t:'T7',m:''}, {t:'T7',m:''},  null,           null,            null,             null,            null,           null,          null  ],
-    // 幹線5.5
-    [ null,          {t:'T11',m:''}, {t:'T11',m:''},  null,            null,             null,            null,           null,          null  ],
-    // 幹線8
-    [ null,          null,           {t:'T16',m:''},  {t:'T16',m:''},  {t:'T20',m:''},   null,            null,           null,          null  ],
-    // 幹線14
-    [ null,          null,           {t:'T20',m:''},  {t:'T20',m:''},  {t:'T20',m:''},   {t:'T26',m:''},  null,           null,          null  ],
-    // 幹線22
-    [ null,          null,           null,            {t:'T26',m:''},  {t:'T26',m:''},   {t:'T26',m:''},  {t:'T44',m:''}, null,          null  ],
-    // 幹線38
-    [ null,          null,           null,            {t:'T44',m:''},  {t:'T60',m:''},   {t:'T60',m:''},  {t:'T60',m:''}, {t:'T76',m:''},null  ],
-    // 幹線60
-    [ null,          null,           null,            null,            {t:'T76',m:''},   {t:'T76',m:''},  {t:'T76',m:''}, {t:'T98',m:''},{t:'T122',m:''} ],
-    // 幹線100
-    [ null,          null,           null,            null,            {t:'T122',m:''},  {t:'T122',m:''}, {t:'T154',m:''},{t:'T190',m:''},{t:'T240',m:''}],
-    // 幹線150
-    [ null,          null,           null,            null,            {t:'T190',m:''},  {t:'T190',m:''}, {t:'T190',m:''},{t:'T240',m:''},{t:'T288',m:''}],
-    // 幹線200
-    [ null,          null,           null,            null,            {t:'T240',m:''},  {t:'T240',m:''}, {t:'T240',m:''},{t:'T288',m:''},{t:'T365',m:''}],
-    // 幹線250
-    [ null,          null,           null,            null,            {t:'T288',m:''},  {t:'T288',m:''}, {t:'T288',m:''},{t:'T365',m:''},null  ],
+    [{t:'T7',m:''},{t:'T7',m:''},null,null,null,null,null,null,null],
+    [null,{t:'T11',m:''},{t:'T11',m:''},null,null,null,null,null,null],
+    [null,null,{t:'T16',m:''},{t:'T16',m:''},{t:'T20',m:''},null,null,null,null],
+    [null,null,{t:'T20',m:''},{t:'T20',m:''},{t:'T20',m:''},{t:'T26',m:''},null,null,null],
+    [null,null,null,{t:'T26',m:''},{t:'T26',m:''},{t:'T26',m:''},{t:'T44',m:''},null,null],
+    [null,null,null,{t:'T44',m:''},{t:'T60',m:''},{t:'T60',m:''},{t:'T60',m:''},{t:'T76',m:''},null],
+    [null,null,null,null,{t:'T76',m:''},{t:'T76',m:''},{t:'T76',m:''},{t:'T98',m:''},{t:'T122',m:''}],
+    [null,null,null,null,{t:'T122',m:''},{t:'T122',m:''},{t:'T154',m:''},{t:'T190',m:''},{t:'T240',m:''}],
+    [null,null,null,null,{t:'T190',m:''},{t:'T190',m:''},{t:'T190',m:''},{t:'T240',m:''},{t:'T288',m:''}],
+    [null,null,null,null,{t:'T240',m:''},{t:'T240',m:''},{t:'T240',m:''},{t:'T288',m:''},{t:'T365',m:''}],
+    [null,null,null,null,{t:'T288',m:''},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''},null],
   ],
 };
 
@@ -334,13 +418,9 @@ let curType = null;
 let curMainIdx = null;
 
 function selectType(btn, type) {
-  curType = type;
-  curMainIdx = null;
-
+  curType = type; curMainIdx = null;
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-
-  // 幹線ボタン生成
   const grid = document.getElementById('mainGrid');
   grid.innerHTML = '';
   MAIN_SIZES.forEach((sz, i) => {
@@ -350,79 +430,175 @@ function selectType(btn, type) {
     b.onclick = () => selectMain(i, b);
     grid.appendChild(b);
   });
-
-  document.getElementById('step2').style.display = 'block';
-  document.getElementById('step3').style.display = 'none';
-  document.getElementById('divider2').style.display = 'none';
-  document.getElementById('resultArea').style.display = 'none';
-  document.getElementById('dividerResult').style.display = 'none';
-
-  setTimeout(() => {
-    document.getElementById('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  document.getElementById('t-step2').style.display = 'block';
+  document.getElementById('t-step3').style.display = 'none';
+  document.getElementById('t-divider2').style.display = 'none';
+  document.getElementById('t-resultArea').style.display = 'none';
+  document.getElementById('t-dividerResult').style.display = 'none';
+  setTimeout(() => document.getElementById('t-step2').scrollIntoView({behavior:'smooth',block:'start'}), 50);
 }
 
 function selectMain(idx, btn) {
   curMainIdx = idx;
   document.querySelectorAll('#mainGrid .size-btn').forEach(b => b.classList.remove('selected-main'));
   btn.classList.add('selected-main');
-
-  // 分岐ボタン生成（選択した幹線で使える組み合わせのみ有効）
   const row = TABLE[curType][idx];
   const grid = document.getElementById('branchGrid');
   grid.innerHTML = '';
-
   BRANCH_SIZES.forEach((sz, i) => {
     const b = document.createElement('button');
-    const available = row[i] !== null;
-    b.className = 'size-btn' + (available ? '' : ' disabled');
+    const ok = row[i] !== null;
+    b.className = 'size-btn' + (ok ? '' : ' disabled');
     b.innerHTML = sz.label + (sz.sub ? `<span class="size-sub">${sz.sub}</span>` : '');
-    if (available) {
-      b.onclick = () => selectBranch(idx, i, b);
-    }
+    if (ok) b.onclick = () => selectBranch(idx, i, b);
     grid.appendChild(b);
   });
-
-  document.getElementById('step3').style.display = 'block';
-  document.getElementById('divider2').style.display = 'block';
-  document.getElementById('resultArea').style.display = 'none';
-  document.getElementById('dividerResult').style.display = 'none';
-
-  setTimeout(() => {
-    document.getElementById('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  document.getElementById('t-step3').style.display = 'block';
+  document.getElementById('t-divider2').style.display = 'block';
+  document.getElementById('t-resultArea').style.display = 'none';
+  document.getElementById('t-dividerResult').style.display = 'none';
+  setTimeout(() => document.getElementById('t-step3').scrollIntoView({behavior:'smooth',block:'start'}), 50);
 }
 
-function selectBranch(mainIdx, branchIdx, btn) {
+function selectBranch(mi, bi, btn) {
   document.querySelectorAll('#branchGrid .size-btn').forEach(b => b.classList.remove('selected-branch'));
   btn.classList.add('selected-branch');
-
-  const data = TABLE[curType][mainIdx][branchIdx];
-  const mainLabel = MAIN_SIZES[mainIdx].label;
-  const branchLabel = BRANCH_SIZES[branchIdx].label;
-
+  const data = TABLE[curType][mi][bi];
   let markHtml = '';
-  let noteText = `${curType}電線 幹線${mainLabel}mm² × 分岐${branchLabel}mm² の組み合わせ。`;
+  let note = `${curType}電線 幹線${MAIN_SIZES[mi].label}mm² × 分岐${BRANCH_SIZES[bi].label}mm² の組み合わせ。`;
+  if (data.m === '◎') { markHtml = ' <span class="mark-badge mark-maru">◎ 推奨</span>'; note += '　カタログ推奨の組み合わせです。'; }
+  else if (data.m === '△') { markHtml = ' <span class="mark-badge mark-sankaku">△ 条件付き</span>'; note += '　使用可能ですが、カタログを確認してください。'; }
+  document.getElementById('rResult').innerHTML = data.t + markHtml;
+  document.getElementById('rNote').textContent = note;
+  document.getElementById('t-dividerResult').style.display = 'block';
+  document.getElementById('t-resultArea').style.display = 'block';
+  setTimeout(() => document.getElementById('t-resultArea').scrollIntoView({behavior:'smooth',block:'start'}), 50);
+}
 
-  if (data.m === '◎') {
-    markHtml = ' <span class="mark-badge mark-maru">◎ 推奨</span>';
-    noteText += '　この組み合わせはカタログ推奨の組み合わせです。';
-  } else if (data.m === '△') {
-    markHtml = ' <span class="mark-badge mark-sankaku">△ 条件付き</span>';
-    noteText += '　使用可能ですが、カタログを確認のうえ施工してください。';
+// ============================================================
+// P形スリーブ データ
+// ============================================================
+const WIRE_SIZES = [
+  { label:'1.6φ', sub:'2mm²',  area:2.0  },
+  { label:'2.0φ', sub:'3.5mm²',area:3.5  },
+  { label:'2.6φ', sub:'5.5mm²',area:5.5  },
+  { label:'5.5',  sub:'mm²',   area:5.5  },
+  { label:'8',    sub:'mm²',   area:8.0  },
+  { label:'14',   sub:'mm²',   area:14.0 },
+  { label:'22',   sub:'mm²',   area:22.0 },
+  { label:'38',   sub:'mm²',   area:38.0 },
+  { label:'60',   sub:'mm²',   area:60.0 },
+  { label:'100',  sub:'mm²',   area:100.0},
+];
+
+const P_SLEEVES = [
+  { name:'P 0.5',  min:0.25,  max:0.75  },
+  { name:'P 1.25', min:0.25,  max:1.65  },
+  { name:'P 2',    min:1.04,  max:2.63  },
+  { name:'P 5.5',  min:2.63,  max:6.64  },
+  { name:'P 8',    min:6.64,  max:10.52 },
+  { name:'P 14',   min:10.52, max:16.78 },
+  { name:'P 22',   min:16.78, max:26.66 },
+  { name:'P 38',   min:26.66, max:42.42 },
+  { name:'P 60',   min:42.42, max:60.57 },
+  { name:'P 70',   min:60.57, max:76.28 },
+  { name:'P 80',   min:76.28, max:96.3  },
+  { name:'P 100',  min:96.3,  max:117.2 },
+  { name:'P 150',  min:117.2, max:152.05},
+  { name:'P 180',  min:152.05,max:192.6 },
+  { name:'P 200',  min:192.6, max:242.27},
+  { name:'P 325',  min:242.27,max:325.0 },
+];
+
+let wireCounts = new Array(WIRE_SIZES.length).fill(0);
+
+function initWireGrid() {
+  const grid = document.getElementById('wireGrid');
+  grid.innerHTML = '';
+  WIRE_SIZES.forEach((w, i) => {
+    const b = document.createElement('button');
+    b.className = 'wire-btn';
+    b.id = `wire-${i}`;
+    b.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span>`;
+    b.onclick = () => addWire(i);
+    grid.appendChild(b);
+  });
+}
+
+function addWire(i) {
+  wireCounts[i]++;
+  updateWireUI(i);
+  updatePResult();
+}
+
+function updateWireUI(i) {
+  const btn = document.getElementById(`wire-${i}`);
+  const cnt = wireCounts[i];
+  // バッジを除いた中身を再生成
+  const w = WIRE_SIZES[i];
+  if (cnt > 0) {
+    btn.classList.add('has-count');
+    btn.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span><span class="wire-count-badge">${cnt}</span>`;
+    btn.onclick = () => { wireCounts[i] = (wireCounts[i] + 1) > 9 ? 1 : wireCounts[i] + 1; updateWireUI(i); updatePResult(); };
+  } else {
+    btn.classList.remove('has-count');
+    btn.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span>`;
+    btn.onclick = () => addWire(i);
+  }
+}
+
+function resetWires() {
+  wireCounts = new Array(WIRE_SIZES.length).fill(0);
+  WIRE_SIZES.forEach((_, i) => updateWireUI(i));
+  document.getElementById('pTotal').textContent = '0.00 mm²';
+  document.getElementById('p-resultArea').style.display = 'none';
+}
+
+function updatePResult() {
+  let total = 0;
+  const details = [];
+  WIRE_SIZES.forEach((w, i) => {
+    if (wireCounts[i] > 0) {
+      total += w.area * wireCounts[i];
+      details.push(`${w.label}×${wireCounts[i]}本`);
+    }
+  });
+
+  document.getElementById('pTotal').textContent = total.toFixed(2) + ' mm²';
+
+  if (total === 0) {
+    document.getElementById('p-resultArea').style.display = 'none';
+    return;
   }
 
-  document.getElementById('rResult').innerHTML = data.t + markHtml;
-  document.getElementById('rSub').textContent = `ニチフ T形コネクタ（分岐接続用）`;
-  document.getElementById('rNote').textContent = noteText;
+  const match = P_SLEEVES.find(p => total >= p.min && total <= p.max);
+  const resultArea = document.getElementById('p-resultArea');
+  resultArea.style.display = 'block';
 
-  document.getElementById('dividerResult').style.display = 'block';
-  document.getElementById('resultArea').style.display = 'block';
-
-  setTimeout(() => {
-    document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  if (match) {
+    document.getElementById('pResult').textContent = match.name;
+    document.getElementById('pRange').textContent = `抱合範囲：${match.min}〜${match.max} mm²`;
+    document.getElementById('pNote').textContent = details.join(' + ') + `　合計 ${total.toFixed(2)}mm²`;
+  } else {
+    document.getElementById('pResult').textContent = '範囲外';
+    document.getElementById('pRange').textContent = `合計 ${total.toFixed(2)} mm²`;
+    document.getElementById('pNote').textContent = 'P形スリーブの抱合範囲を超えています。電線の組み合わせを見直してください。';
+  }
 }
+
+// ============================================================
+// タブ切り替え
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 't') || (i === 1 && tab === 'p'));
+  });
+  document.getElementById('tab-t').classList.toggle('active', tab === 't');
+  document.getElementById('tab-p').classList.toggle('active', tab === 'p');
+}
+
+// 初期化
+initWireGrid();
 </script>
 </body>
 </html>
