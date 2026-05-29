@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>T形コネクタ選定</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      background: #f0f0f0;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 18px 16px 14px;
+      text-align: center;
+    }
+    header h1 { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+    header p { font-size: 12px; color: #8899bb; margin-top: 4px; }
+
+    .section { padding: 16px; }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .step-badge {
+      background: #e85c0a;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-title { font-size: 14px; font-weight: bold; color: #444; }
+
+    /* 電線種別 */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .type-btn {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 18px 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #111;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.4;
+      transition: all 0.12s;
+    }
+    .type-btn .sub {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      font-weight: normal;
+      margin-top: 3px;
+    }
+    .type-btn.selected {
+      background: #1a1a2e;
+      border-color: #1a1a2e;
+      color: white;
+    }
+    .type-btn.selected .sub { color: #7799cc; }
+
+    /* サイズボタン */
+    .size-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .size-btn {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 17px;
+      font-weight: bold;
+      color: #111;
+      cursor: pointer;
+      min-width: 64px;
+      text-align: center;
+      transition: all 0.12s;
+    }
+    .size-btn .size-sub {
+      display: block;
+      font-size: 10px;
+      color: #999;
+      font-weight: normal;
+      margin-top: 2px;
+    }
+    .size-btn.selected-main {
+      background: #1a1a2e;
+      border-color: #1a1a2e;
+      color: white;
+    }
+    .size-btn.selected-main .size-sub { color: #7799cc; }
+    .size-btn.selected-branch {
+      background: #e85c0a;
+      border-color: #e85c0a;
+      color: white;
+    }
+    .size-btn.selected-branch .size-sub { color: #ffe0cc; }
+    .size-btn.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* 結果 */
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .result-card.accent-orange { border-top: 4px solid #e85c0a; }
+    .result-card.accent-blue   { border-top: 4px solid #1a1a2e; }
+
+    .result-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .result-value {
+      font-size: 52px;
+      font-weight: bold;
+      color: #e85c0a;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .result-sub {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    .result-note {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.7;
+    }
+
+    .mark-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .mark-maru { background: #e8f4ff; color: #1a6abf; border: 1px solid #1a6abf; }
+    .mark-sankaku { background: #fff8e8; color: #b07800; border: 1px solid #b07800; }
+
+    .note {
+      font-size: 11px;
+      color: #aaa;
+      padding: 0 16px;
+      line-height: 1.7;
+    }
+
+    .divider { height: 8px; background: #e8e8e8; }
+    #step2 { display: none; }
+    #step3 { display: none; }
+    #resultArea { display: none; }
+    #dividerResult { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ T形コネクタ選定</h1>
+  <p>ニチフ T形コネクタ（分岐接続用）即検索ツール</p>
+</header>
+
+<!-- STEP 1: 電線種別 -->
+<div class="section" id="step1">
+  <div class="step-header">
+    <div class="step-badge">1</div>
+    <div class="step-title">電線の種類を選ぶ</div>
+  </div>
+  <div class="type-grid">
+    <button class="type-btn" onclick="selectType(this,'IV')">IV電線<span class="sub">600V ビニル絶縁電線</span></button>
+    <button class="type-btn" onclick="selectType(this,'CV')">CV電線<span class="sub">架橋ポリエチレン絶縁</span></button>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- STEP 2: 幹線サイズ -->
+<div class="section" id="step2">
+  <div class="step-header">
+    <div class="step-badge">2</div>
+    <div class="step-title">幹線サイズを選ぶ（mm²）</div>
+  </div>
+  <div class="size-grid" id="mainGrid"></div>
+</div>
+
+<div class="divider" id="divider2" style="display:none"></div>
+
+<!-- STEP 3: 分岐サイズ -->
+<div class="section" id="step3">
+  <div class="step-header">
+    <div class="step-badge">3</div>
+    <div class="step-title">分岐サイズを選ぶ（mm²）</div>
+  </div>
+  <div class="size-grid" id="branchGrid"></div>
+</div>
+
+<div class="divider" id="dividerResult"></div>
+
+<!-- RESULT -->
+<div id="resultArea">
+  <div class="section">
+    <div class="result-card accent-orange">
+      <div class="result-label">使用するT形コネクタ</div>
+      <div class="result-value" id="rResult">—</div>
+      <div class="result-sub" id="rSub"></div>
+    </div>
+    <div class="result-card accent-blue">
+      <div class="result-label">備考</div>
+      <div class="result-note" id="rNote">—</div>
+    </div>
+  </div>
+  <p class="note">
+    ※ ニチフ T形コネクタ（分岐接続用）のカタログデータに基づく値です。<br>
+    ※ ◎：推奨組み合わせ　△：使用可能（条件確認推奨）<br>
+    ※ 現場条件・電線メーカーにより異なる場合があります。必ずカタログで確認してください。
+  </p>
+</div>
+
+<script>
+// ============================================================
+// T形コネクタ電線組合せ表（ニチフカタログ準拠）
+// 行：幹線サイズ、列：分岐サイズ
+// 値：T号数文字列（null=組み合わせ不可）
+// マーク: ◎=推奨, △=条件付き
+// ============================================================
+
+const MAIN_SIZES = [
+  { label: '3.5', sub: '(2.0φ)' },
+  { label: '5.5', sub: '' },
+  { label: '8',   sub: '' },
+  { label: '14',  sub: '' },
+  { label: '22',  sub: '' },
+  { label: '38',  sub: '' },
+  { label: '60',  sub: '' },
+  { label: '100', sub: '' },
+  { label: '150', sub: '' },
+  { label: '200', sub: '' },
+  { label: '250', sub: '' },
+];
+
+const BRANCH_SIZES = [
+  { label: '2',   sub: '(1.6φ)' },
+  { label: '3.5', sub: '(2.0φ)' },
+  { label: '5.5', sub: '' },
+  { label: '8',   sub: '' },
+  { label: '14',  sub: '' },
+  { label: '22',  sub: '' },
+  { label: '38',  sub: '' },
+  { label: '60',  sub: '' },
+  { label: '100', sub: '' },
+];
+
+// マーク凡例: '' = 通常, '◎' = 推奨, '△' = 条件付き
+// フォーマット: { t: 'T44', m: '◎' } または null
+
+const TABLE = {
+  IV: [
+    // 幹線3.5
+    [ {t:'T7',m:''}, {t:'T7',m:''},  null,           null,            null,             null,            null,           null,          null  ],
+    // 幹線5.5
+    [ null,          {t:'T11',m:''}, {t:'T11',m:''},  null,            null,             null,            null,           null,          null  ],
+    // 幹線8
+    [ null,          null,           {t:'T16',m:''},  {t:'T16',m:''},  {t:'T16〜T20',m:''},null,          null,           null,          null  ],
+    // 幹線14
+    [ null,          null,           {t:'T16〜T20',m:''},{t:'T20',m:''},{t:'T20',m:''},  {t:'T26',m:''},  null,           null,          null  ],
+    // 幹線22
+    [ null,          null,           null,            {t:'T26',m:''},  {t:'T26',m:''},   {t:'T44',m:''},  {t:'T44',m:''}, null,          null  ],
+    // 幹線38
+    [ null,          null,           null,            {t:'T44',m:'◎'},{t:'T44',m:'◎'},  {t:'T44',m:''},  {t:'T60',m:''}, {t:'T60',m:''},{t:'T76',m:''}  ],
+    // 幹線60
+    [ null,          null,           null,            {t:'T76',m:'◎'},{t:'T76',m:'◎'},  {t:'T76',m:''},  {t:'T76',m:''}, {t:'T98',m:''},{t:'T122',m:''} ],
+    // 幹線100
+    [ null,          null,           null,            {t:'T122',m:'◎'},{t:'T122',m:'◎'},{t:'T122',m:'△'},{t:'T122',m:''},{t:'T154',m:''},{t:'T190',m:''}],
+    // 幹線150
+    [ null,          null,           null,            {t:'T154',m:'◎'},{t:'T190',m:'◎'},{t:'T190',m:'△'},{t:'T190',m:''},{t:'T190',m:''},{t:'T240',m:''}],
+    // 幹線200
+    [ null,          null,           null,            {t:'T240',m:'◎'},{t:'T240',m:'◎'},{t:'T240',m:'△'},{t:'T240',m:'◎'},{t:'T240',m:''},{t:'T288',m:''}],
+    // 幹線250
+    [ null,          null,           null,            null,            null,             {t:'T288',m:'◎'},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''}],
+  ],
+  CV: [
+    // 幹線3.5
+    [ {t:'T7',m:''}, {t:'T7',m:''},  null,           null,            null,             null,            null,           null,          null  ],
+    // 幹線5.5
+    [ null,          {t:'T11',m:''}, {t:'T11',m:''},  null,            null,             null,            null,           null,          null  ],
+    // 幹線8
+    [ null,          null,           {t:'T16',m:''},  {t:'T16',m:''},  {t:'T20',m:''},   null,            null,           null,          null  ],
+    // 幹線14
+    [ null,          null,           {t:'T20',m:''},  {t:'T20',m:''},  {t:'T20',m:''},   {t:'T26',m:''},  null,           null,          null  ],
+    // 幹線22
+    [ null,          null,           null,            {t:'T26',m:''},  {t:'T26',m:''},   {t:'T26',m:''},  {t:'T44',m:''}, null,          null  ],
+    // 幹線38
+    [ null,          null,           null,            {t:'T44',m:''},  {t:'T60',m:''},   {t:'T60',m:''},  {t:'T60',m:''}, {t:'T76',m:''},null  ],
+    // 幹線60
+    [ null,          null,           null,            null,            {t:'T76',m:''},   {t:'T76',m:''},  {t:'T76',m:''}, {t:'T98',m:''},{t:'T122',m:''} ],
+    // 幹線100
+    [ null,          null,           null,            null,            {t:'T122',m:''},  {t:'T122',m:''}, {t:'T154',m:''},{t:'T190',m:''},{t:'T240',m:''}],
+    // 幹線150
+    [ null,          null,           null,            null,            {t:'T190',m:''},  {t:'T190',m:''}, {t:'T190',m:''},{t:'T240',m:''},{t:'T288',m:''}],
+    // 幹線200
+    [ null,          null,           null,            null,            {t:'T240',m:''},  {t:'T240',m:''}, {t:'T240',m:''},{t:'T288',m:''},{t:'T365',m:''}],
+    // 幹線250
+    [ null,          null,           null,            null,            {t:'T288',m:''},  {t:'T288',m:''}, {t:'T288',m:''},{t:'T365',m:''},null  ],
+  ],
+};
+
+let curType = null;
+let curMainIdx = null;
+
+function selectType(btn, type) {
+  curType = type;
+  curMainIdx = null;
+
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // 幹線ボタン生成
+  const grid = document.getElementById('mainGrid');
+  grid.innerHTML = '';
+  MAIN_SIZES.forEach((sz, i) => {
+    const b = document.createElement('button');
+    b.className = 'size-btn';
+    b.innerHTML = sz.label + (sz.sub ? `<span class="size-sub">${sz.sub}</span>` : '');
+    b.onclick = () => selectMain(i, b);
+    grid.appendChild(b);
+  });
+
+  document.getElementById('step2').style.display = 'block';
+  document.getElementById('step3').style.display = 'none';
+  document.getElementById('divider2').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('dividerResult').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function selectMain(idx, btn) {
+  curMainIdx = idx;
+  document.querySelectorAll('#mainGrid .size-btn').forEach(b => b.classList.remove('selected-main'));
+  btn.classList.add('selected-main');
+
+  // 分岐ボタン生成（選択した幹線で使える組み合わせのみ有効）
+  const row = TABLE[curType][idx];
+  const grid = document.getElementById('branchGrid');
+  grid.innerHTML = '';
+
+  BRANCH_SIZES.forEach((sz, i) => {
+    const b = document.createElement('button');
+    const available = row[i] !== null;
+    b.className = 'size-btn' + (available ? '' : ' disabled');
+    b.innerHTML = sz.label + (sz.sub ? `<span class="size-sub">${sz.sub}</span>` : '');
+    if (available) {
+      b.onclick = () => selectBranch(idx, i, b);
+    }
+    grid.appendChild(b);
+  });
+
+  document.getElementById('step3').style.display = 'block';
+  document.getElementById('divider2').style.display = 'block';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('dividerResult').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function selectBranch(mainIdx, branchIdx, btn) {
+  document.querySelectorAll('#branchGrid .size-btn').forEach(b => b.classList.remove('selected-branch'));
+  btn.classList.add('selected-branch');
+
+  const data = TABLE[curType][mainIdx][branchIdx];
+  const mainLabel = MAIN_SIZES[mainIdx].label;
+  const branchLabel = BRANCH_SIZES[branchIdx].label;
+
+  let markHtml = '';
+  let noteText = `${curType}電線 幹線${mainLabel}mm² × 分岐${branchLabel}mm² の組み合わせ。`;
+
+  if (data.m === '◎') {
+    markHtml = ' <span class="mark-badge mark-maru">◎ 推奨</span>';
+    noteText += '　この組み合わせはカタログ推奨の組み合わせです。';
+  } else if (data.m === '△') {
+    markHtml = ' <span class="mark-badge mark-sankaku">△ 条件付き</span>';
+    noteText += '　使用可能ですが、カタログを確認のうえ施工してください。';
+  }
+
+  document.getElementById('rResult').innerHTML = data.t + markHtml;
+  document.getElementById('rSub').textContent = `ニチフ T形コネクタ（分岐接続用）`;
+  document.getElementById('rNote').textContent = noteText;
+
+  document.getElementById('dividerResult').style.display = 'block';
+  document.getElementById('resultArea').style.display = 'block';
+
+  setTimeout(() => {
+    document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+</script>
+</body>
+</html>
