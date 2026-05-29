@@ -471,7 +471,7 @@ function updatePResult(){
   }
 }
 
-// リングスリーブ結果
+// リングスリーブ結果（JIS C 2806・内線規程準拠）
 function updateRResult(){
   const n16=rCounts[0],n20=rCounts[1],n26=rCounts[2];
   const total=n16+n20+n26;
@@ -483,32 +483,68 @@ function updateRResult(){
   if(total<2){document.getElementById('r-resultArea').style.display='none';return;}
 
   let size='',mark='',note='';
-  // 判定ロジック（内線規程準拠）
+
   if(n26===0&&n20===0){
     // 1.6mmのみ
-    if(n16===2){size='小';mark='○';note='1.6mm×2本のみの接続。';}
-    else if(n16>=3&&n16<=4){size='小';mark='小';note=`1.6mm×${n16}本の接続。`;}
-    else if(n16>=5&&n16<=6){size='中';mark='中';note=`1.6mm×${n16}本の接続。`;}
+    if(n16===2)                    {size='小';mark='○';note='1.6mm×2本のみの接続。';}
+    else if(n16>=3&&n16<=4)        {size='小';mark='小';note=`1.6mm×${n16}本の接続。`;}
+    else if(n16>=5&&n16<=6)        {size='中';mark='中';note=`1.6mm×${n16}本の接続。`;}
+    else if(n16===7)               {size='大';mark='大';note='1.6mm×7本の接続。';}
     else{size='—';mark='—';note='組み合わせ範囲外です。';}
+
   } else if(n26===0&&n16===0){
     // 2.0mmのみ
-    if(n20===2){size='小';mark='小';note='2.0mm×2本の接続。';}
-    else if(n20>=3&&n20<=4){size='中';mark='中';note=`2.0mm×${n20}本の接続。`;}
+    if(n20===2)                    {size='小';mark='小';note='2.0mm×2本の接続。';}
+    else if(n20>=3&&n20<=4)        {size='中';mark='中';note=`2.0mm×${n20}本の接続。`;}
+    else if(n20===5)               {size='大';mark='大';note='2.0mm×5本の接続。';}
     else{size='—';mark='—';note='組み合わせ範囲外です。';}
+
   } else if(n16===0&&n20===0){
     // 2.6mmのみ
-    if(n26>=2&&n26<=4){size='中';mark='中';note=`2.6mm×${n26}本の接続。`;}
+    if(n26===2)                    {size='中';mark='中';note='2.6mm×2本の接続。';}
+    else if(n26===3)               {size='大';mark='大';note='2.6mm×3本の接続。';}
     else{size='—';mark='—';note='組み合わせ範囲外です。';}
+
+  } else if(n26===0){
+    // 1.6mm + 2.0mm 混合
+    if     (n20===1&&n16>=1&&n16<=2){size='小';mark='小';}
+    else if(n20===1&&n16>=3&&n16<=5){size='中';mark='中';}
+    else if(n20===2&&n16>=1&&n16<=3){size='中';mark='中';}
+    else if(n20===3&&n16===1)       {size='中';mark='中';}
+    else if(n20===1&&n16===6)       {size='大';mark='大';}
+    else if(n20===2&&n16===4)       {size='大';mark='大';}
+    else if(n20===3&&n16===2)       {size='大';mark='大';}
+    else if(n20===4&&n16===1)       {size='大';mark='大';}
+    else{size='—';mark='—';}
+    note=info.join(' + ')+'の接続。';
+
+  } else if(n20===0){
+    // 1.6mm + 2.6mm 混合
+    if     (n26===1&&n16>=1&&n16<=3){size='中';mark='中';}
+    else if(n26===2&&n16===1)       {size='中';mark='中';}
+    else if(n26===2&&n16===2)       {size='大';mark='大';}
+    else{size='—';mark='—';}
+    note=info.join(' + ')+'の接続。';
+
+  } else if(n16===0){
+    // 2.0mm + 2.6mm 混合
+    if     (n26===1&&n20>=1&&n20<=2){size='中';mark='中';}
+    else if(n26===1&&n20===3)       {size='大';mark='大';}
+    else if(n26===2&&n20===1)       {size='大';mark='大';}
+    else{size='—';mark='—';}
+    note=info.join(' + ')+'の接続。';
+
   } else {
-    // 混合：断面積合計で判定
-    const area=n16*2.0+n20*3.5+n26*5.5;
-    if(area<=8&&n26===0){size='小';mark='小';note=info.join('+')+`の接続。断面積合計 ${area.toFixed(1)}mm²。`;}
-    else if(area<=14){size='中';mark='中';note=info.join('+')+`の接続。断面積合計 ${area.toFixed(1)}mm²。`;}
-    else{size='—';mark='—';note='組み合わせ範囲外。カタログで確認してください。';}
+    // 三種混合（1.6mm + 2.0mm + 2.6mm）
+    if     (n26===1&&n20===1&&n16>=1&&n16<=2){size='中';mark='中';}
+    else if(n26===1&&n20===2&&n16===1)       {size='大';mark='大';}
+    else{size='—';mark='—';}
+    note=info.join(' + ')+'の接続。';
   }
+
   document.getElementById('rSize').textContent=size;
   document.getElementById('rMark').textContent=mark;
-  document.getElementById('rNote2').textContent=note;
+  document.getElementById('rNote2').textContent=note||info.join(' + ')+'の接続。';
   document.getElementById('r-resultArea').style.display='block';
 }
 
