@@ -6,304 +6,165 @@
   <title>接続材選定ツール</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
     body {
       font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-      background: #f0f0f0;
-      color: #111;
-      min-height: 100vh;
-      padding-bottom: 40px;
+      background: #f0f0f0; color: #111;
+      min-height: 100vh; padding-bottom: 40px;
     }
-
-    header {
-      background: #1a1a2e;
-      color: white;
-      padding: 18px 16px 14px;
-      text-align: center;
-    }
+    header { background: #1a1a2e; color: white; padding: 18px 16px 14px; text-align: center; }
     header h1 { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
     header p { font-size: 12px; color: #8899bb; margin-top: 4px; }
 
     /* タブ */
-    .tab-bar {
-      display: flex;
-      background: #111827;
-    }
+    .tab-bar { display: flex; background: #111827; overflow-x: auto; }
     .tab-btn {
-      flex: 1;
-      padding: 14px 8px;
-      font-size: 14px;
-      font-weight: bold;
-      color: #7799cc;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
+      flex: 1; min-width: 80px; padding: 12px 4px;
+      font-size: 12px; font-weight: bold; color: #7799cc;
+      background: none; border: none; border-bottom: 3px solid transparent;
+      cursor: pointer; text-align: center; white-space: nowrap; transition: all 0.15s;
     }
-    .tab-btn.active {
-      color: #e85c0a;
-      border-bottom-color: #e85c0a;
-    }
-
+    .tab-btn.active { color: #e85c0a; border-bottom-color: #e85c0a; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     .section { padding: 16px; }
-
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+    .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .step-badge {
-      background: #e85c0a;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      background: #e85c0a; color: white; font-size: 12px; font-weight: bold;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .step-title { font-size: 14px; font-weight: bold; color: #444; }
 
-    /* 電線種別 */
-    .type-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
+    .type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .type-btn {
-      background: white;
-      border: 2px solid #ddd;
-      border-radius: 12px;
-      padding: 18px 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #111;
-      cursor: pointer;
-      text-align: center;
-      line-height: 1.4;
-      transition: all 0.12s;
+      background: white; border: 2px solid #ddd; border-radius: 12px;
+      padding: 18px 10px; font-size: 18px; font-weight: bold; color: #111;
+      cursor: pointer; text-align: center; line-height: 1.4; transition: all 0.12s;
     }
-    .type-btn .sub {
-      display: block;
-      font-size: 11px;
-      color: #888;
-      font-weight: normal;
-      margin-top: 3px;
-    }
-    .type-btn.selected {
-      background: #1a1a2e;
-      border-color: #1a1a2e;
-      color: white;
-    }
+    .type-btn .sub { display: block; font-size: 11px; color: #888; font-weight: normal; margin-top: 3px; }
+    .type-btn.selected { background: #1a1a2e; border-color: #1a1a2e; color: white; }
     .type-btn.selected .sub { color: #7799cc; }
 
-    /* サイズボタン共通 */
-    .size-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    .size-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .size-btn {
-      background: white;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 17px;
-      font-weight: bold;
-      color: #111;
-      cursor: pointer;
-      min-width: 64px;
-      text-align: center;
-      transition: all 0.12s;
+      background: white; border: 2px solid #ddd; border-radius: 10px;
+      padding: 12px 14px; font-size: 17px; font-weight: bold; color: #111;
+      cursor: pointer; min-width: 64px; text-align: center; transition: all 0.12s;
     }
-    .size-btn .size-sub {
-      display: block;
-      font-size: 10px;
-      color: #999;
-      font-weight: normal;
-      margin-top: 2px;
-    }
+    .size-btn .size-sub { display: block; font-size: 10px; color: #999; font-weight: normal; margin-top: 2px; }
     .size-btn.selected-main  { background: #1a1a2e; border-color: #1a1a2e; color: white; }
     .size-btn.selected-main .size-sub { color: #7799cc; }
     .size-btn.selected-branch { background: #e85c0a; border-color: #e85c0a; color: white; }
-    .size-btn.selected-branch .size-sub { color: #ffe0cc; }
     .size-btn.disabled { opacity: 0.3; pointer-events: none; }
 
-    /* Pスリーブ：電線カウンター */
-    .wire-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    /* カウンターボタン（共通） */
+    .wire-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .wire-btn {
-      background: white;
-      border: 2px solid #ddd;
-      border-radius: 12px;
-      padding: 14px 10px;
-      font-size: 17px;
-      font-weight: bold;
-      color: #111;
-      cursor: pointer;
-      min-width: 72px;
-      text-align: center;
-      position: relative;
-      transition: all 0.12s;
+      background: white; border: 2px solid #ddd; border-radius: 12px;
+      padding: 14px 10px; font-size: 17px; font-weight: bold; color: #111;
+      cursor: pointer; min-width: 72px; text-align: center;
+      position: relative; transition: all 0.12s;
     }
-    .wire-btn .wire-sub {
-      display: block;
-      font-size: 10px;
-      color: #999;
-      font-weight: normal;
-      margin-top: 2px;
-    }
-    .wire-btn.has-count {
-      background: #1a1a2e;
-      border-color: #1a1a2e;
-      color: white;
-    }
+    .wire-btn .wire-sub { display: block; font-size: 10px; color: #999; font-weight: normal; margin-top: 2px; }
+    .wire-btn.has-count { background: #1a1a2e; border-color: #1a1a2e; color: white; }
     .wire-btn.has-count .wire-sub { color: #7799cc; }
     .wire-count-badge {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #e85c0a;
-      color: white;
-      font-size: 13px;
-      font-weight: bold;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute; top: -8px; right: -8px;
+      background: #e85c0a; color: white; font-size: 13px; font-weight: bold;
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* 合計表示バー */
+    /* 合計バー */
     .total-bar {
-      background: white;
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      background: white; border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 12px; display: flex; align-items: center;
+      justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
     .total-label { font-size: 12px; color: #888; }
     .total-value { font-size: 22px; font-weight: bold; color: #1a1a2e; }
     .reset-btn {
-      background: #f0f0f0;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13px;
-      color: #666;
-      cursor: pointer;
-      font-weight: bold;
+      background: #f0f0f0; border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; color: #666; cursor: pointer; font-weight: bold;
     }
 
     /* 結果カード */
     .result-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      background: white; border-radius: 12px; padding: 20px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
     .result-card.accent-orange { border-top: 4px solid #e85c0a; }
     .result-card.accent-blue   { border-top: 4px solid #1a1a2e; }
-
+    .result-card.accent-green  { border-top: 4px solid #2d8c4e; }
     .result-label { font-size: 12px; color: #888; margin-bottom: 8px; }
-    .result-value {
-      font-size: 52px;
-      font-weight: bold;
-      color: #e85c0a;
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-    .result-sub { font-size: 13px; color: #aaa; margin-top: 8px; }
+    .result-value { font-size: 52px; font-weight: bold; color: #e85c0a; line-height: 1; letter-spacing: -1px; }
+    .result-value.green { color: #2d8c4e; }
+    .result-sub  { font-size: 13px; color: #aaa; margin-top: 8px; }
     .result-note { font-size: 14px; color: #333; line-height: 1.7; }
 
-    .mark-badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-left: 8px;
-      vertical-align: middle;
+    /* 圧着マーク */
+    .mark-row { display: flex; gap: 12px; margin-top: 4px; align-items: center; }
+    .mark-chip {
+      display: inline-block; font-size: 13px; font-weight: bold;
+      padding: 4px 12px; border-radius: 6px;
     }
     .mark-maru    { background: #e8f4ff; color: #1a6abf; border: 1px solid #1a6abf; }
-    .mark-sankaku { background: #fff8e8; color: #b07800; border: 1px solid #b07800; }
+    .mark-sho     { background: #f0fff4; color: #2d8c4e; border: 1px solid #2d8c4e; }
+    .mark-chuu    { background: #fff8e8; color: #b07800; border: 1px solid #b07800; }
+    .mark-t-maru  { background: #e8f4ff; color: #1a6abf; border: 1px solid #1a6abf; }
+    .mark-t-sankaku { background: #fff8e8; color: #b07800; border: 1px solid #b07800; }
 
-    .note {
-      font-size: 11px;
-      color: #aaa;
-      padding: 0 16px;
-      line-height: 1.7;
-    }
-
+    .note { font-size: 11px; color: #aaa; padding: 0 16px; line-height: 1.7; }
     .divider { height: 8px; background: #e8e8e8; }
+
+    /* リングスリーブ：大きい表示 */
+    .ring-result-main {
+      display: flex; gap: 12px; align-items: flex-end; margin-bottom: 8px;
+    }
+    .ring-size-box {
+      text-align: center;
+    }
+    .ring-size-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .ring-size-val { font-size: 44px; font-weight: bold; color: #e85c0a; line-height: 1; }
+    .ring-mark-box { text-align: center; }
+    .ring-mark-val { font-size: 40px; font-weight: bold; color: #1a1a2e; line-height: 1; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>⚡ 接続材選定ツール</h1>
-  <p>T形コネクタ・Pスリーブ 即検索（ニチフ）</p>
+  <p>T形コネクタ・Pスリーブ・リングスリーブ・CE端子（ニチフ）</p>
 </header>
 
-<!-- タブ -->
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('t')">T形コネクタ</button>
-  <button class="tab-btn" onclick="switchTab('p')">P形スリーブ</button>
+  <button class="tab-btn active"  onclick="switchTab('t')">T形<br>コネクタ</button>
+  <button class="tab-btn"         onclick="switchTab('p')">P形<br>スリーブ</button>
+  <button class="tab-btn"         onclick="switchTab('r')">リング<br>スリーブ</button>
+  <button class="tab-btn"         onclick="switchTab('ce')">CE<br>端子</button>
 </div>
 
 <!-- ===================== T形コネクタ ===================== -->
 <div class="tab-content active" id="tab-t">
-
-  <div class="section" id="t-step1">
-    <div class="step-header">
-      <div class="step-badge">1</div>
-      <div class="step-title">電線の種類を選ぶ</div>
-    </div>
+  <div class="section">
+    <div class="step-header"><div class="step-badge">1</div><div class="step-title">電線の種類を選ぶ</div></div>
     <div class="type-grid">
-      <button class="type-btn" onclick="selectType(this,'IV')">IV電線<span class="sub">600V ビニル絶縁電線</span></button>
+      <button class="type-btn" onclick="selectType(this,'IV')">IV電線<span class="sub">600Vビニル絶縁電線</span></button>
       <button class="type-btn" onclick="selectType(this,'CV')">CV電線<span class="sub">架橋ポリエチレン絶縁</span></button>
     </div>
   </div>
-
   <div class="divider"></div>
-
   <div class="section" id="t-step2" style="display:none">
-    <div class="step-header">
-      <div class="step-badge">2</div>
-      <div class="step-title">幹線サイズを選ぶ（mm²）</div>
-    </div>
+    <div class="step-header"><div class="step-badge">2</div><div class="step-title">幹線サイズを選ぶ（mm²）</div></div>
     <div class="size-grid" id="mainGrid"></div>
   </div>
-
   <div class="divider" id="t-divider2" style="display:none"></div>
-
   <div class="section" id="t-step3" style="display:none">
-    <div class="step-header">
-      <div class="step-badge">3</div>
-      <div class="step-title">分岐サイズを選ぶ（mm²）</div>
-    </div>
+    <div class="step-header"><div class="step-badge">3</div><div class="step-title">分岐サイズを選ぶ（mm²）</div></div>
     <div class="size-grid" id="branchGrid"></div>
   </div>
-
-  <div class="divider" id="t-dividerResult" style="display:none"></div>
-
+  <div class="divider" id="t-divR" style="display:none"></div>
   <div id="t-resultArea" style="display:none">
     <div class="section">
       <div class="result-card accent-orange">
@@ -316,36 +177,22 @@
         <div class="result-note" id="rNote">—</div>
       </div>
     </div>
-    <p class="note">
-      ※ ニチフ T形コネクタ（分岐接続用）カタログ準拠。<br>
-      ※ ◎：推奨組み合わせ　△：使用可能（条件確認推奨）<br>
-      ※ 現場条件・電線メーカーにより異なる場合があります。
-    </p>
+    <p class="note">※ ニチフ T形コネクタカタログ準拠。◎推奨 △条件確認要</p>
   </div>
 </div>
 
 <!-- ===================== P形スリーブ ===================== -->
 <div class="tab-content" id="tab-p">
-
   <div class="section">
-    <div class="step-header">
-      <div class="step-badge">1</div>
-      <div class="step-title">接続する電線を選ぶ（タップで本数を追加）</div>
-    </div>
-    <div class="wire-grid" id="wireGrid"></div>
+    <div class="step-header"><div class="step-badge">1</div><div class="step-title">接続する電線を選ぶ（タップで本数追加）</div></div>
+    <div class="wire-grid" id="pWireGrid"></div>
   </div>
-
   <div class="divider"></div>
-
   <div class="section">
     <div class="total-bar">
-      <div>
-        <div class="total-label">断面積合計</div>
-        <div class="total-value" id="pTotal">0.00 mm²</div>
-      </div>
-      <button class="reset-btn" onclick="resetWires()">リセット</button>
+      <div><div class="total-label">断面積合計</div><div class="total-value" id="pTotal">0.00 mm²</div></div>
+      <button class="reset-btn" onclick="resetWires('p')">リセット</button>
     </div>
-
     <div id="p-resultArea" style="display:none">
       <div class="result-card accent-orange">
         <div class="result-label">使用するPスリーブ</div>
@@ -358,35 +205,88 @@
       </div>
     </div>
   </div>
+  <p class="note">※ ニチフ P形裸圧着スリーブカタログ準拠。</p>
+</div>
 
-  <p class="note">
-    ※ ニチフ P形裸圧着スリーブ カタログ準拠。<br>
-    ※ 電線の断面積合計から号数を選定します。<br>
-    ※ 必ずカタログで確認してください。
-  </p>
+<!-- ===================== リングスリーブ ===================== -->
+<div class="tab-content" id="tab-r">
+  <div class="section">
+    <div class="step-header"><div class="step-badge">1</div><div class="step-title">電線を選ぶ（タップで本数追加）</div></div>
+    <div class="wire-grid" id="rWireGrid"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section">
+    <div class="total-bar">
+      <div><div class="total-label">電線の合計</div><div class="total-value" id="rWireInfo">—</div></div>
+      <button class="reset-btn" onclick="resetWires('r')">リセット</button>
+    </div>
+    <div id="r-resultArea" style="display:none">
+      <div class="result-card accent-orange">
+        <div class="result-label">リングスリーブ</div>
+        <div class="ring-result-main">
+          <div class="ring-size-box">
+            <div class="ring-size-label">サイズ</div>
+            <div class="ring-size-val" id="rSize">—</div>
+          </div>
+          <div style="font-size:28px;color:#ccc;padding-bottom:8px;">／</div>
+          <div class="ring-mark-box">
+            <div class="ring-size-label">圧着マーク</div>
+            <div class="ring-mark-val" id="rMark">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="result-card accent-blue">
+        <div class="result-label">備考</div>
+        <div class="result-note" id="rNote2">—</div>
+      </div>
+    </div>
+  </div>
+  <p class="note">※ 内線規程・JIS C 2806準拠。1.6mm・2.0mm・2.6mm単線用。<br>※ より線・CV等は断面積に応じて別途確認してください。</p>
+</div>
+
+<!-- ===================== CE端子 ===================== -->
+<div class="tab-content" id="tab-ce">
+  <div class="section">
+    <div class="step-header"><div class="step-badge">1</div><div class="step-title">接続する電線を選ぶ（タップで本数追加）</div></div>
+    <div class="wire-grid" id="ceWireGrid"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section">
+    <div class="total-bar">
+      <div><div class="total-label">断面積合計</div><div class="total-value" id="ceTotal">0.00 mm²</div></div>
+      <button class="reset-btn" onclick="resetWires('ce')">リセット</button>
+    </div>
+    <div id="ce-resultArea" style="display:none">
+      <div class="result-card accent-orange">
+        <div class="result-label">使用するCE端子</div>
+        <div class="result-value" id="ceResult">—</div>
+        <div class="result-sub" id="ceRange"></div>
+      </div>
+      <div class="result-card accent-blue">
+        <div class="result-label">接続内容</div>
+        <div class="result-note" id="ceNote">—</div>
+      </div>
+    </div>
+  </div>
+  <p class="note">※ ニチフ CE形裸圧着スリーブカタログ準拠。<br>※ 断面積合計から号数を目安として表示します。必ずカタログで確認してください。</p>
 </div>
 
 <script>
 // ============================================================
-// T形コネクタ データ
+// T形コネクタ
 // ============================================================
 const MAIN_SIZES = [
-  { label:'3.5', sub:'(2.0φ)' }, { label:'5.5', sub:'' },
-  { label:'8',   sub:'' },        { label:'14',  sub:'' },
-  { label:'22',  sub:'' },        { label:'38',  sub:'' },
-  { label:'60',  sub:'' },        { label:'100', sub:'' },
-  { label:'150', sub:'' },        { label:'200', sub:'' },
-  { label:'250', sub:'' },
+  {label:'3.5',sub:'(2.0φ)'},{label:'5.5',sub:''},{label:'8',sub:''},{label:'14',sub:''},
+  {label:'22',sub:''},{label:'38',sub:''},{label:'60',sub:''},{label:'100',sub:''},
+  {label:'150',sub:''},{label:'200',sub:''},{label:'250',sub:''},
 ];
 const BRANCH_SIZES = [
-  { label:'2',   sub:'(1.6φ)' }, { label:'3.5', sub:'(2.0φ)' },
-  { label:'5.5', sub:'' },        { label:'8',   sub:'' },
-  { label:'14',  sub:'' },        { label:'22',  sub:'' },
-  { label:'38',  sub:'' },        { label:'60',  sub:'' },
-  { label:'100', sub:'' },
+  {label:'2',sub:'(1.6φ)'},{label:'3.5',sub:'(2.0φ)'},{label:'5.5',sub:''},
+  {label:'8',sub:''},{label:'14',sub:''},{label:'22',sub:''},
+  {label:'38',sub:''},{label:'60',sub:''},{label:'100',sub:''},
 ];
-const TABLE = {
-  IV: [
+const T_TABLE = {
+  IV:[
     [{t:'T7',m:''},{t:'T7',m:''},null,null,null,null,null,null,null],
     [null,{t:'T11',m:''},{t:'T11',m:''},null,null,null,null,null,null],
     [null,null,{t:'T16',m:''},{t:'T16',m:''},{t:'T16〜T20',m:''},null,null,null,null],
@@ -399,7 +299,7 @@ const TABLE = {
     [null,null,null,{t:'T240',m:'◎'},{t:'T240',m:'◎'},{t:'T240',m:'△'},{t:'T240',m:'◎'},{t:'T240',m:''},{t:'T288',m:''}],
     [null,null,null,null,null,{t:'T288',m:'◎'},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''}],
   ],
-  CV: [
+  CV:[
     [{t:'T7',m:''},{t:'T7',m:''},null,null,null,null,null,null,null],
     [null,{t:'T11',m:''},{t:'T11',m:''},null,null,null,null,null,null],
     [null,null,{t:'T16',m:''},{t:'T16',m:''},{t:'T20',m:''},null,null,null,null],
@@ -413,192 +313,238 @@ const TABLE = {
     [null,null,null,null,{t:'T288',m:''},{t:'T288',m:''},{t:'T288',m:''},{t:'T365',m:''},null],
   ],
 };
-
-let curType = null;
-let curMainIdx = null;
-
-function selectType(btn, type) {
-  curType = type; curMainIdx = null;
-  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+let curType=null,curMainIdx=null;
+function selectType(btn,type){
+  curType=type;curMainIdx=null;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
-  const grid = document.getElementById('mainGrid');
-  grid.innerHTML = '';
-  MAIN_SIZES.forEach((sz, i) => {
-    const b = document.createElement('button');
-    b.className = 'size-btn';
-    b.innerHTML = sz.label + (sz.sub ? `<span class="size-sub">${sz.sub}</span>` : '');
-    b.onclick = () => selectMain(i, b);
-    grid.appendChild(b);
+  const grid=document.getElementById('mainGrid');grid.innerHTML='';
+  MAIN_SIZES.forEach((sz,i)=>{
+    const b=document.createElement('button');b.className='size-btn';
+    b.innerHTML=sz.label+(sz.sub?`<span class="size-sub">${sz.sub}</span>`:'');
+    b.onclick=()=>selectMain(i,b);grid.appendChild(b);
   });
-  document.getElementById('t-step2').style.display = 'block';
-  document.getElementById('t-step3').style.display = 'none';
-  document.getElementById('t-divider2').style.display = 'none';
-  document.getElementById('t-resultArea').style.display = 'none';
-  document.getElementById('t-dividerResult').style.display = 'none';
-  setTimeout(() => document.getElementById('t-step2').scrollIntoView({behavior:'smooth',block:'start'}), 50);
+  document.getElementById('t-step2').style.display='block';
+  ['t-step3','t-divider2','t-resultArea','t-divR'].forEach(id=>document.getElementById(id).style.display='none');
+  setTimeout(()=>document.getElementById('t-step2').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
-
-function selectMain(idx, btn) {
-  curMainIdx = idx;
-  document.querySelectorAll('#mainGrid .size-btn').forEach(b => b.classList.remove('selected-main'));
+function selectMain(idx,btn){
+  curMainIdx=idx;
+  document.querySelectorAll('#mainGrid .size-btn').forEach(b=>b.classList.remove('selected-main'));
   btn.classList.add('selected-main');
-  const row = TABLE[curType][idx];
-  const grid = document.getElementById('branchGrid');
-  grid.innerHTML = '';
-  BRANCH_SIZES.forEach((sz, i) => {
-    const b = document.createElement('button');
-    const ok = row[i] !== null;
-    b.className = 'size-btn' + (ok ? '' : ' disabled');
-    b.innerHTML = sz.label + (sz.sub ? `<span class="size-sub">${sz.sub}</span>` : '');
-    if (ok) b.onclick = () => selectBranch(idx, i, b);
-    grid.appendChild(b);
+  const row=T_TABLE[curType][idx];
+  const grid=document.getElementById('branchGrid');grid.innerHTML='';
+  BRANCH_SIZES.forEach((sz,i)=>{
+    const b=document.createElement('button');const ok=row[i]!==null;
+    b.className='size-btn'+(ok?'':' disabled');
+    b.innerHTML=sz.label+(sz.sub?`<span class="size-sub">${sz.sub}</span>`:'');
+    if(ok)b.onclick=()=>selectBranch(idx,i,b);grid.appendChild(b);
   });
-  document.getElementById('t-step3').style.display = 'block';
-  document.getElementById('t-divider2').style.display = 'block';
-  document.getElementById('t-resultArea').style.display = 'none';
-  document.getElementById('t-dividerResult').style.display = 'none';
-  setTimeout(() => document.getElementById('t-step3').scrollIntoView({behavior:'smooth',block:'start'}), 50);
+  document.getElementById('t-step3').style.display='block';
+  document.getElementById('t-divider2').style.display='block';
+  ['t-resultArea','t-divR'].forEach(id=>document.getElementById(id).style.display='none');
+  setTimeout(()=>document.getElementById('t-step3').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
-
-function selectBranch(mi, bi, btn) {
-  document.querySelectorAll('#branchGrid .size-btn').forEach(b => b.classList.remove('selected-branch'));
+function selectBranch(mi,bi,btn){
+  document.querySelectorAll('#branchGrid .size-btn').forEach(b=>b.classList.remove('selected-branch'));
   btn.classList.add('selected-branch');
-  const data = TABLE[curType][mi][bi];
-  let markHtml = '';
-  let note = `${curType}電線 幹線${MAIN_SIZES[mi].label}mm² × 分岐${BRANCH_SIZES[bi].label}mm² の組み合わせ。`;
-  if (data.m === '◎') { markHtml = ' <span class="mark-badge mark-maru">◎ 推奨</span>'; note += '　カタログ推奨の組み合わせです。'; }
-  else if (data.m === '△') { markHtml = ' <span class="mark-badge mark-sankaku">△ 条件付き</span>'; note += '　使用可能ですが、カタログを確認してください。'; }
-  document.getElementById('rResult').innerHTML = data.t + markHtml;
-  document.getElementById('rNote').textContent = note;
-  document.getElementById('t-dividerResult').style.display = 'block';
-  document.getElementById('t-resultArea').style.display = 'block';
-  setTimeout(() => document.getElementById('t-resultArea').scrollIntoView({behavior:'smooth',block:'start'}), 50);
+  const data=T_TABLE[curType][mi][bi];
+  let markHtml='';
+  let note=`${curType}電線 幹線${MAIN_SIZES[mi].label}mm² × 分岐${BRANCH_SIZES[bi].label}mm²。`;
+  if(data.m==='◎'){markHtml=' <span class="mark-chip mark-t-maru">◎ 推奨</span>';note+=' カタログ推奨の組み合わせです。';}
+  else if(data.m==='△'){markHtml=' <span class="mark-chip mark-t-sankaku">△ 条件付き</span>';note+=' カタログを確認してください。';}
+  document.getElementById('rResult').innerHTML=data.t+markHtml;
+  document.getElementById('rNote').textContent=note;
+  document.getElementById('t-divR').style.display='block';
+  document.getElementById('t-resultArea').style.display='block';
+  setTimeout(()=>document.getElementById('t-resultArea').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 
 // ============================================================
-// P形スリーブ データ
+// 共通：カウンター系（P / リング / CE）
 // ============================================================
-const WIRE_SIZES = [
-  { label:'1.6φ', sub:'2mm²',  area:2.0  },
-  { label:'2.0φ', sub:'3.5mm²',area:3.5  },
-  { label:'2.6φ', sub:'5.5mm²',area:5.5  },
-  { label:'5.5',  sub:'mm²',   area:5.5  },
-  { label:'8',    sub:'mm²',   area:8.0  },
-  { label:'14',   sub:'mm²',   area:14.0 },
-  { label:'22',   sub:'mm²',   area:22.0 },
-  { label:'38',   sub:'mm²',   area:38.0 },
-  { label:'60',   sub:'mm²',   area:60.0 },
-  { label:'100',  sub:'mm²',   area:100.0},
+const P_WIRES = [
+  {label:'1.6φ',sub:'2mm²',area:2.0},{label:'2.0φ',sub:'3.5mm²',area:3.5},
+  {label:'2.6φ',sub:'5.5mm²',area:5.5},{label:'5.5',sub:'mm²',area:5.5},
+  {label:'8',sub:'mm²',area:8.0},{label:'14',sub:'mm²',area:14.0},
+  {label:'22',sub:'mm²',area:22.0},{label:'38',sub:'mm²',area:38.0},
+  {label:'60',sub:'mm²',area:60.0},{label:'100',sub:'mm²',area:100.0},
+];
+const R_WIRES = [
+  {label:'1.6mm',sub:'単線',area:2.0,dia:1.6},
+  {label:'2.0mm',sub:'単線',area:3.5,dia:2.0},
+  {label:'2.6mm',sub:'単線',area:5.5,dia:2.6},
+];
+const CE_WIRES = [
+  {label:'0.3mm',sub:'(22AWG)',area:0.3},{label:'0.5mm',sub:'(20AWG)',area:0.5},
+  {label:'0.75mm',sub:'(18AWG)',area:0.75},{label:'1.25mm',sub:'(16AWG)',area:1.25},
+  {label:'2.0mm',sub:'(14AWG)',area:2.0},{label:'3.5mm',sub:'(12AWG)',area:3.5},
+  {label:'5.5mm',sub:'(10AWG)',area:5.5},
 ];
 
-const P_SLEEVES = [
-  { name:'P 0.5',  min:0.25,  max:0.75  },
-  { name:'P 1.25', min:0.25,  max:1.65  },
-  { name:'P 2',    min:1.04,  max:2.63  },
-  { name:'P 5.5',  min:2.63,  max:6.64  },
-  { name:'P 8',    min:6.64,  max:10.52 },
-  { name:'P 14',   min:10.52, max:16.78 },
-  { name:'P 22',   min:16.78, max:26.66 },
-  { name:'P 38',   min:26.66, max:42.42 },
-  { name:'P 60',   min:42.42, max:60.57 },
-  { name:'P 70',   min:60.57, max:76.28 },
-  { name:'P 80',   min:76.28, max:96.3  },
-  { name:'P 100',  min:96.3,  max:117.2 },
-  { name:'P 150',  min:117.2, max:152.05},
-  { name:'P 180',  min:152.05,max:192.6 },
-  { name:'P 200',  min:192.6, max:242.27},
-  { name:'P 325',  min:242.27,max:325.0 },
+const P_SLEEVES=[
+  {name:'P 0.5',min:0.25,max:0.75},{name:'P 1.25',min:0.25,max:1.65},
+  {name:'P 2',min:1.04,max:2.63},{name:'P 5.5',min:2.63,max:6.64},
+  {name:'P 8',min:6.64,max:10.52},{name:'P 14',min:10.52,max:16.78},
+  {name:'P 22',min:16.78,max:26.66},{name:'P 38',min:26.66,max:42.42},
+  {name:'P 60',min:42.42,max:60.57},{name:'P 70',min:60.57,max:76.28},
+  {name:'P 80',min:76.28,max:96.3},{name:'P 100',min:96.3,max:117.2},
+  {name:'P 150',min:117.2,max:152.05},{name:'P 180',min:152.05,max:192.6},
+  {name:'P 200',min:192.6,max:242.27},{name:'P 325',min:242.27,max:325.0},
+];
+const CE_SLEEVES=[
+  {name:'CE 1',min:0.5,max:1.75},{name:'CE 2',min:1.0,max:3.0},
+  {name:'CE 5',min:2.5,max:6.0},{name:'CE 8',min:4.0,max:9.0},
 ];
 
-let wireCounts = new Array(WIRE_SIZES.length).fill(0);
+let pCounts=[],rCounts=[],ceCounts=[];
 
-function initWireGrid() {
-  const grid = document.getElementById('wireGrid');
-  grid.innerHTML = '';
-  WIRE_SIZES.forEach((w, i) => {
-    const b = document.createElement('button');
-    b.className = 'wire-btn';
-    b.id = `wire-${i}`;
-    b.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span>`;
-    b.onclick = () => addWire(i);
+function initWireGrid(type){
+  const wires = type==='p'?P_WIRES : type==='r'?R_WIRES : CE_WIRES;
+  const counts = type==='p'?pCounts : type==='r'?rCounts : ceCounts;
+  const gridId = type==='p'?'pWireGrid' : type==='r'?'rWireGrid' : 'ceWireGrid';
+  counts.length=0; wires.forEach(()=>counts.push(0));
+  const grid=document.getElementById(gridId); grid.innerHTML='';
+  wires.forEach((w,i)=>{
+    const b=document.createElement('button');
+    b.className='wire-btn'; b.id=`${type}-wire-${i}`;
+    b.innerHTML=`${w.label}<span class="wire-sub">${w.sub}</span>`;
+    b.onclick=()=>tapWire(type,i);
     grid.appendChild(b);
   });
 }
 
-function addWire(i) {
-  wireCounts[i]++;
-  updateWireUI(i);
-  updatePResult();
+function tapWire(type,i){
+  const counts=type==='p'?pCounts:type==='r'?rCounts:ceCounts;
+  counts[i]=(counts[i]+1)>9?1:counts[i]+1;
+  updateWireBtn(type,i);
+  updateResult(type);
 }
 
-function updateWireUI(i) {
-  const btn = document.getElementById(`wire-${i}`);
-  const cnt = wireCounts[i];
-  // バッジを除いた中身を再生成
-  const w = WIRE_SIZES[i];
-  if (cnt > 0) {
+function updateWireBtn(type,i){
+  const wires=type==='p'?P_WIRES:type==='r'?R_WIRES:CE_WIRES;
+  const counts=type==='p'?pCounts:type==='r'?rCounts:ceCounts;
+  const btn=document.getElementById(`${type}-wire-${i}`);
+  const w=wires[i];const cnt=counts[i];
+  if(cnt>0){
     btn.classList.add('has-count');
-    btn.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span><span class="wire-count-badge">${cnt}</span>`;
-    btn.onclick = () => { wireCounts[i] = (wireCounts[i] + 1) > 9 ? 1 : wireCounts[i] + 1; updateWireUI(i); updatePResult(); };
+    btn.innerHTML=`${w.label}<span class="wire-sub">${w.sub}</span><span class="wire-count-badge">${cnt}</span>`;
   } else {
     btn.classList.remove('has-count');
-    btn.innerHTML = `${w.label}<span class="wire-sub">${w.sub}</span>`;
-    btn.onclick = () => addWire(i);
+    btn.innerHTML=`${w.label}<span class="wire-sub">${w.sub}</span>`;
   }
+  btn.onclick=()=>tapWire(type,i);
 }
 
-function resetWires() {
-  wireCounts = new Array(WIRE_SIZES.length).fill(0);
-  WIRE_SIZES.forEach((_, i) => updateWireUI(i));
-  document.getElementById('pTotal').textContent = '0.00 mm²';
-  document.getElementById('p-resultArea').style.display = 'none';
+function resetWires(type){
+  const wires=type==='p'?P_WIRES:type==='r'?R_WIRES:CE_WIRES;
+  const counts=type==='p'?pCounts:type==='r'?rCounts:ceCounts;
+  counts.fill(0);
+  wires.forEach((_,i)=>updateWireBtn(type,i));
+  if(type==='p'){document.getElementById('pTotal').textContent='0.00 mm²';document.getElementById('p-resultArea').style.display='none';}
+  if(type==='r'){document.getElementById('rWireInfo').textContent='—';document.getElementById('r-resultArea').style.display='none';}
+  if(type==='ce'){document.getElementById('ceTotal').textContent='0.00 mm²';document.getElementById('ce-resultArea').style.display='none';}
 }
 
-function updatePResult() {
-  let total = 0;
-  const details = [];
-  WIRE_SIZES.forEach((w, i) => {
-    if (wireCounts[i] > 0) {
-      total += w.area * wireCounts[i];
-      details.push(`${w.label}×${wireCounts[i]}本`);
-    }
-  });
+function updateResult(type){
+  if(type==='p') updatePResult();
+  if(type==='r') updateRResult();
+  if(type==='ce') updateCEResult();
+}
 
-  document.getElementById('pTotal').textContent = total.toFixed(2) + ' mm²';
-
-  if (total === 0) {
-    document.getElementById('p-resultArea').style.display = 'none';
-    return;
-  }
-
-  const match = P_SLEEVES.find(p => total >= p.min && total <= p.max);
-  const resultArea = document.getElementById('p-resultArea');
-  resultArea.style.display = 'block';
-
-  if (match) {
-    document.getElementById('pResult').textContent = match.name;
-    document.getElementById('pRange').textContent = `抱合範囲：${match.min}〜${match.max} mm²`;
-    document.getElementById('pNote').textContent = details.join(' + ') + `　合計 ${total.toFixed(2)}mm²`;
+// P形スリーブ結果
+function updatePResult(){
+  let total=0;const details=[];
+  P_WIRES.forEach((w,i)=>{if(pCounts[i]>0){total+=w.area*pCounts[i];details.push(`${w.label}×${pCounts[i]}本`);}});
+  document.getElementById('pTotal').textContent=total.toFixed(2)+' mm²';
+  if(total===0){document.getElementById('p-resultArea').style.display='none';return;}
+  const match=P_SLEEVES.find(p=>total>=p.min&&total<=p.max);
+  document.getElementById('p-resultArea').style.display='block';
+  if(match){
+    document.getElementById('pResult').textContent=match.name;
+    document.getElementById('pRange').textContent=`抱合範囲：${match.min}〜${match.max} mm²`;
+    document.getElementById('pNote').textContent=details.join(' + ')+`　合計 ${total.toFixed(2)}mm²`;
   } else {
-    document.getElementById('pResult').textContent = '範囲外';
-    document.getElementById('pRange').textContent = `合計 ${total.toFixed(2)} mm²`;
-    document.getElementById('pNote').textContent = 'P形スリーブの抱合範囲を超えています。電線の組み合わせを見直してください。';
+    document.getElementById('pResult').textContent='範囲外';
+    document.getElementById('pRange').textContent=`合計 ${total.toFixed(2)} mm²`;
+    document.getElementById('pNote').textContent='Pスリーブの抱合範囲を超えています。電線の組み合わせを見直してください。';
   }
 }
 
-// ============================================================
+// リングスリーブ結果
+function updateRResult(){
+  const n16=rCounts[0],n20=rCounts[1],n26=rCounts[2];
+  const total=n16+n20+n26;
+  const info=[];
+  if(n16>0)info.push(`1.6mm×${n16}本`);
+  if(n20>0)info.push(`2.0mm×${n20}本`);
+  if(n26>0)info.push(`2.6mm×${n26}本`);
+  document.getElementById('rWireInfo').textContent=total>0?info.join(' + '):'—';
+  if(total<2){document.getElementById('r-resultArea').style.display='none';return;}
+
+  let size='',mark='',note='';
+  // 判定ロジック（内線規程準拠）
+  if(n26===0&&n20===0){
+    // 1.6mmのみ
+    if(n16===2){size='小';mark='○';note='1.6mm×2本のみの接続。';}
+    else if(n16>=3&&n16<=4){size='小';mark='小';note=`1.6mm×${n16}本の接続。`;}
+    else if(n16>=5&&n16<=6){size='中';mark='中';note=`1.6mm×${n16}本の接続。`;}
+    else{size='—';mark='—';note='組み合わせ範囲外です。';}
+  } else if(n26===0&&n16===0){
+    // 2.0mmのみ
+    if(n20===2){size='小';mark='小';note='2.0mm×2本の接続。';}
+    else if(n20>=3&&n20<=4){size='中';mark='中';note=`2.0mm×${n20}本の接続。`;}
+    else{size='—';mark='—';note='組み合わせ範囲外です。';}
+  } else if(n16===0&&n20===0){
+    // 2.6mmのみ
+    if(n26>=2&&n26<=4){size='中';mark='中';note=`2.6mm×${n26}本の接続。`;}
+    else{size='—';mark='—';note='組み合わせ範囲外です。';}
+  } else {
+    // 混合：断面積合計で判定
+    const area=n16*2.0+n20*3.5+n26*5.5;
+    if(area<=8&&n26===0){size='小';mark='小';note=info.join('+')+`の接続。断面積合計 ${area.toFixed(1)}mm²。`;}
+    else if(area<=14){size='中';mark='中';note=info.join('+')+`の接続。断面積合計 ${area.toFixed(1)}mm²。`;}
+    else{size='—';mark='—';note='組み合わせ範囲外。カタログで確認してください。';}
+  }
+  document.getElementById('rSize').textContent=size;
+  document.getElementById('rMark').textContent=mark;
+  document.getElementById('rNote2').textContent=note;
+  document.getElementById('r-resultArea').style.display='block';
+}
+
+// CE端子結果
+function updateCEResult(){
+  let total=0;const details=[];
+  CE_WIRES.forEach((w,i)=>{if(ceCounts[i]>0){total+=w.area*ceCounts[i];details.push(`${w.label}×${ceCounts[i]}本`);}});
+  document.getElementById('ceTotal').textContent=total.toFixed(2)+' mm²';
+  if(total===0){document.getElementById('ce-resultArea').style.display='none';return;}
+  // 複数候補がある場合は全て表示
+  const matches=CE_SLEEVES.filter(c=>total>=c.min&&total<=c.max);
+  document.getElementById('ce-resultArea').style.display='block';
+  if(matches.length>0){
+    document.getElementById('ceResult').textContent=matches.map(m=>m.name).join(' / ');
+    document.getElementById('ceRange').textContent=matches.map(m=>`${m.name}：${m.min}〜${m.max}mm²`).join('　');
+    document.getElementById('ceNote').textContent=details.join(' + ')+`　合計 ${total.toFixed(2)}mm²`;
+  } else {
+    document.getElementById('ceResult').textContent='範囲外';
+    document.getElementById('ceRange').textContent=`合計 ${total.toFixed(2)} mm²`;
+    document.getElementById('ceNote').textContent='CE端子の抱合範囲を超えています。電線の組み合わせを見直してください。';
+  }
+}
+
 // タブ切り替え
-// ============================================================
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', (i === 0 && tab === 't') || (i === 1 && tab === 'p'));
+function switchTab(tab){
+  const tabs=['t','p','r','ce'];
+  tabs.forEach((t,i)=>{
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active',t===tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
   });
-  document.getElementById('tab-t').classList.toggle('active', tab === 't');
-  document.getElementById('tab-p').classList.toggle('active', tab === 'p');
 }
 
 // 初期化
-initWireGrid();
+initWireGrid('p');
+initWireGrid('r');
+initWireGrid('ce');
 </script>
 </body>
 </html>
